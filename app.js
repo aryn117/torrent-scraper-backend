@@ -1,23 +1,15 @@
 const express = require('express');
 const path = require('path');
-const scrap1337x = require('./torrent/1337x');
-const scrapNyaa = require('./torrent/nyaaSI');
-const scrapYts = require('./torrent/yts');
-const scrapPirateBay = require('./torrent/pirateBay');
-const scrapTorLock = require('./torrent/torLock');
-const scrapEzTVio = require('./torrent/ezTV');
-const torrentGalaxy = require('./torrent/torrentGalaxy');
-const combo = require('./torrent/COMBO');
-const rarbg = require('./torrent/rarbg');
-const ettvCentral = require('./torrent/ettv');
-const zooqle = require('./torrent/zooqle');
-const kickAss = require('./torrent/kickAss');
-const bitSearch = require('./torrent/bitSearch');
-const glodls = require('./torrent/gloTorrents');
-const magnet_dl = require('./torrent/magnet_dl');
-const limeTorrent = require('./torrent/limeTorrent');
-const torrentFunk = require('./torrent/torrentFunk');
-const torrentProject = require('./torrent/torrentProject');
+
+const fetchFromAllProviders = require('./torrent/fetchFromAllProviders');
+
+const search_1337x = require('./torrent/providers/search_1337x');
+const search_torrentgalaxy = require('./torrent/providers/search_torrentgalaxy');
+const search_rarbg = require('./torrent/providers/search_rarbg');
+const search_kickass = require('./torrent/providers/search_kickass');
+const search_limetorrents = require('./torrent/providers/search_limetorrents');
+const search_torrentproject = require('./torrent/providers/search_torrentproject');
+
 
 const app = express();
 
@@ -28,103 +20,95 @@ app.use((req, res, next) => {
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
     res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-    
+
     if (req.method === "OPTIONS") {
         return res.sendStatus(200);
     }
     next();
 });
 
-app.use('/api/:website/:query/:page?', (req, res, next) => {
-    let website = (req.params.website).toLowerCase();
-    let query = req.params.query;
-    let page = req.params.page;
+app.use('/api/:website/:query/:page?', async (req, res, next) => {
+    // Destructure and normalize parameters
+    const { website: rawWebsite, query, page } = req.params;
+    const website = rawWebsite.toLowerCase();
+    console.log(`API call: website=${website}, query=${query}, page=${page}`);
 
-    if (website === '1337x') {
-        if (page > 50) {
-            return res.json({
-                error: 'Please enter page value less than 51 to get the result :)'
-            });
-        } else {
-            scrap1337x.torrent1337x(query, page)
-                .then((data) => {
-                    if (data === null) {
-                        return res.json({
-                            error: 'Website is blocked change IP'
-                        });
-                    } else if (data.length === 0) {
-                        return res.json({
-                            error: 'No search result available for query (' + query + ')'
-                        });
+    // Helper to send error responses
+    const sendError = (message) => res.json({ error: message });
+
+    // Helper to process and respond with search results
+    const processData = (providerName, data) => {
+        if (data === null) {
+            // Specific error message for 1337x
+            if (providerName === '1337x') {
+                return sendError(
+                    '1337x returned NULL, This may be due to website blocking your IP or the site being unresponsive'
+                );
+            }
+            return sendError('Website is blocked change IP');
+        }
+        if (Array.isArray(data) && data.length === 0) {
+            return sendError(`No search result available for query (${query})`);
+        }
+        return res.send({ [providerName]: data });
+    };
+
+    try {
+        switch (website) {
+            case '1337x': {
+                console.log(`Fetching from 1337x: query=${query}, page=${page}`);
+                if (Number(page) > 50) {
+                    return sendError('You have reached the maximum page limit. Please enter a page value less than 51.');
+                }
+                const data = await search_1337x(query, page);
+                return processData('1337x', data);
+            }
+            case 'torrentgalaxy': {
+                const data = await search_torrentgalaxy(query, page);
+                return processData('torrentgalaxy', data);
+            }
+            case 'kickasstorrents': {
+                const data = await search_kickass(query, page);
+                return processData('kickasstorrents', data);
+            }
+            case 'rarbg': {
+                const data = await search_rarbg(query, page);
+                return processData('rarbg', data);
+            }
+            case 'limetorrents': {
+                console.log(`Fetching from limetorrents: query=${query}, page=${page}`);
+                const data = await search_limetorrents(query, page);
+                return processData('limetorrents', data);
+            }
+            case 'torrentproject': {
+                console.log(`Fetching from torrentproject: query=${query}, page=${page}`);
+                const data = await search_torrentproject(query, page);
+                return processData('torrentproject', data);
+            }
+            case 'all': {
+                // Fetch data from all providers concurrently
+                fetchFromAllProviders(query, page).then((data) => {
+                    if (data && data.length > 0) {
+                        res.send(data);
                     } else {
-                        return res.send(data);
+                        sendError(`No search result available for query (${query})`);
                     }
                 });
-        }
-    }
-    if (website === 'yts') {
-        scrapYts.yts(query, page)
-            .then((data) => {
-                if (data === null) {
-                    return res.json({
-                        error: 'Website is blocked change IP'
-                    });
-                } else if (data.length === 0) {
-                    return res.json({
-                        error: 'No search result available for query (' + query + ')'
-                    });
-                } else {
-                    return res.send(data);
-                }
-            });
-    }
-    if (website === 'eztv') {
-        scrapEzTVio.ezTV(query)
-            .then((data) => {
-                if (data === null) {
-                    return res.json({
-                        error: 'Website is blocked change IP'
-                    });
-                } else if (data.length === 0) {
-                    return res.json({
-                        error: 'No search result available for query (' + query + ')'
-                    });
-                } else {
-                    return res.send(data);
-                }
-            });
-    }
-    if (website === 'torlock') {
-        scrapTorLock.torLock(query, page)
-            .then((data) => {
-                if (data === null) {
-                    return res.json({
-                        error: 'Website is blocked change IP'
-                    });
-                } else if (data.length === 0) {
-                    return res.json({
-                        error: 'No search result available for query (' + query + ')'
-                    });
-                } else {
-                    return res.send(data);
-                }
-            });
-    }
-    if (website === "all") {
-        combo(query, page).then((data) => {
-            if (data !== null && data.length > 0) {
-                return res.send(data);
-            } else {
-                return res.json({
-                    error: 'No search result available for query (' + query + ')'
-                });
+                break;
             }
-        });
+            default:
+                return sendError('Invalid website parameter');
+        }
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Internal server error' });
     }
 });
 
 app.use('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+// send a response that server is running and a html page saying server is running
+
+    res.send('Server is running');    
 });
 
 const PORT = process.env.PORT || 3001;

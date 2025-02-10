@@ -1,12 +1,13 @@
 const cheerio = require('cheerio')
 const axios = require('axios')
 
-async function torrentProject(query, page = '0') {
+async function search_torrentproject(query, page = '0') {          
     var ALLTORRENT = [];
     var ALLURL = [];
     const url = `https://torrentproject2.com/?t=${query}&p=${page}&orderby=seeders`;
     let html;
     try {
+
         html = await axios.get(url, headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.106 Safari/537.36"
         });
@@ -23,12 +24,11 @@ async function torrentProject(query, page = '0') {
             let url = "https://torrentproject2.com" + $(element).find('span').eq(0).find('a').attr('href');
             ALLURL.push(url);
             let torrent = {
-                'Name': $(element).find('span:nth-child(1)').text().trim(),
-                'Size': $(element).find('span:nth-child(5)').text(),
-                'DateUploaded': $(element).find('span:nth-child(4)').text().trim(),
-                'Seeders': $(element).find('span:nth-child(2)').text().trim(),
-                'Leechers': $(element).find('span:nth-child(3)').text().trim(),
-                'Url': url
+                'name': $(element).find('span:nth-child(1)').text().trim(),
+                'size': $(element).find('span:nth-child(5)').text(),
+                'seeders': $(element).find('span:nth-child(2)').text().trim(),
+                'leechers': $(element).find('span:nth-child(3)').text().trim(),
+                'url': url
             }
             if (torrent.Name !== '') {
                 ALLTORRENT.push(torrent);
@@ -38,7 +38,7 @@ async function torrentProject(query, page = '0') {
 
     await Promise.all(ALLURL.map(async url => {
         for (let i = 0; i < ALLTORRENT.length; i++) {
-            if (ALLTORRENT[i]['Url'] === url) {
+            if (ALLTORRENT[i]['url'] === url) {
                 let html;
                 try {
                     html = await axios.get(url, headers = {
@@ -51,7 +51,7 @@ async function torrentProject(query, page = '0') {
                 let magnet = $('.usite a').attr('href');
                 let startMagnetIdx = magnet.indexOf('magnet');
                 magnet = magnet.slice(startMagnetIdx);
-                ALLTORRENT[i].Magnet = decodeURIComponent(magnet);
+                ALLTORRENT[i].magnet = decodeURIComponent(magnet);
 
             }
         }
@@ -62,4 +62,4 @@ async function torrentProject(query, page = '0') {
 }
 
 
-module.exports = torrentProject;
+module.exports = search_torrentproject;
