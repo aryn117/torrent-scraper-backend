@@ -40,7 +40,7 @@ async function search_kickass(query, page = '1') {
     })
 
     await Promise.all(ALLURL.map(async (url) => {
-        console.log("kickass torrents fetching individual magnets")
+    
         for (let i = 0; i < ALLTORRENT.length; i++) {
             if (ALLTORRENT[i]['url'] === url) {
                 let html;

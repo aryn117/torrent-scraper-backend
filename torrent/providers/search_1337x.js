@@ -44,7 +44,7 @@ async function search_1337x(query = '', page = '1') {
             $list = $(element);
             data[labels[i].toLowerCase()] = $list.text();
         })
-        data.Url = element
+        data.url = element
 
         allTorrent.push(data)
     }))

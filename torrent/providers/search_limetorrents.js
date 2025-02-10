@@ -14,7 +14,7 @@ const axios = require('axios')
  * 
  */
 async function search_limetorrents(query, page = '1') {
-    console.log("limetorrents fetching")
+   
     const ALLTORRENT = [];
     const ALLURL = [];
 

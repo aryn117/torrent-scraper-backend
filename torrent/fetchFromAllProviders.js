@@ -7,9 +7,7 @@ const search_torrentproject = require("./providers/search_torrentproject");
 
 
 async function fetchFromAllProviders(query, page = 1) {
-    console.log(
-        `======\nFetching from all providers\nquery: ${query} page: ${page}\n======`
-    );
+
     if (query === undefined || query === null || query === "") {
         throw new Error("Query is empty");
     }
