@@ -1,9 +1,12 @@
 {
     "version": 2,
     "env": {},
-    "api/*.js": {
-      "maxDuration": 60 
+    "functions": {
+      "api/*": {
+        "maxDuration": 30
+      }
     },
+
     "builds": [
       {
         "src": "app.js",
