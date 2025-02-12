@@ -1,14 +1,15 @@
 const express = require('express');
 const path = require('path');
 
-const fetchFromAllProviders = require('./torrent/fetchFromAllProviders');
 
-const search_1337x = require('./torrent/providers/search_1337x');
-const search_torrentgalaxy = require('./torrent/providers/search_torrentgalaxy');
-const search_rarbg = require('./torrent/providers/search_rarbg');
-const search_kickass = require('./torrent/providers/search_kickass');
-const search_limetorrents = require('./torrent/providers/search_limetorrents');
-const search_torrentproject = require('./torrent/providers/search_torrentproject');
+
+const search_1337x = require('./torrent/search_1337x');
+const search_torrentgalaxy = require('./torrent/search_torrentgalaxy');
+const search_rarbg = require('./torrent/search_rarbg');
+const search_kickass = require('./torrent/search_kickass');
+const search_limetorrents = require('./torrent/search_limetorrents');
+const search_torrentproject = require('./torrent/search_torrentproject');
+const search_piratebay = require('./torrent/search_piratebay');
 
 
 const app = express();
@@ -85,17 +86,12 @@ app.use('/api/:website/:query/:page?', async (req, res, next) => {
                 const data = await search_torrentproject(query, page);
                 return processData('torrentproject', data);
             }
-            case 'all': {
-                // Fetch data from all providers concurrently
-                fetchFromAllProviders(query, page).then((data) => {
-                    if (data && data.length > 0) {
-                        res.send(data);
-                    } else {
-                        sendError(`No search result available for query (${query})`);
-                    }
-                });
-                break;
+            case 'piratebay': {
+                console.log(`Fetching from piratebay: query=${query}, page=${page}`);
+                const data = await search_piratebay(query, page);
+                return processData('piratebay', data);
             }
+            
             default:
                 return sendError('Invalid website parameter');
         }

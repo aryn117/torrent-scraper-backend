@@ -2,19 +2,60 @@ const cheerio = require('cheerio')
 const axios = require('axios')
 
 
-/**
- * @description This function fetches torrent data from limetorrents, given a query and page number.
- * @param {string} query The query to search for.
- * @param {string} page The page number to fetch from. Defaults to '1'.
- * @returns {Promise<Array<Object>>} An array of objects each containing torrent data.
- * 
- * @example
- * const torrents = await search_limetorrents('ubuntu', '1');
- * console.log(torrents);
- * 
- */
 async function search_limetorrents(query, page = '1') {
    
+    function changeDateFormat(t) {
+        const duration = (t.split(" ")[0] + t.split(" ")[1]).toLowerCase();    
+        const today = new Date();
+
+        switch (duration.toLowerCase()) {
+            case "today":
+                break; // No change
+            case "yesterday":
+                today.setDate(today.getDate() - 1);
+                break;
+            case "thisweek":
+                today.setDate(today.getDate() - today.getDay()); // Start of the week (Sunday)
+                break;
+            case "lastweek":
+                today.setDate(today.getDate() - today.getDay() - 7); // Start of last week
+                break;
+            case "lastmonth":
+                today.setMonth(today.getMonth() - 1);
+                today.setDate(1); // Start of last month
+                break;
+            default: {
+                const match = duration.match(/(\d+)(days|weeks|years)/);
+                if (!match) {
+                    return duration;
+                }
+
+                const [_, value, unit] = match;
+                const num = parseInt(value, 10);
+
+                switch (unit) {
+                    case "days":
+                        today.setDate(today.getDate() - num);
+                        break;
+                    case "weeks":
+                        today.setDate(today.getDate() - num * 7);
+                        break;
+                    case "years":
+                        today.setFullYear(today.getFullYear() - num);
+                        break;
+                    default:
+                        throw new Error(`Unsupported unit: ${unit}`);
+                }
+            }
+        }
+
+        return today.toLocaleDateString("en-GB", { year: "2-digit", month: "2-digit", day: "2-digit" }).replace(/\//g, "/"); // DD/MM/YY
+    }
+
+
+
+    // scraping lime torrents
+
     const ALLTORRENT = [];
     const ALLURL = [];
 
@@ -43,6 +84,7 @@ async function search_limetorrents(query, page = '1') {
             // Extract the torrent data from the row
             let torrent = {
                 "name": $(element).find('div.tt-name').text().trim(),
+                "dateuploaded": changeDateFormat($(element).find('td').eq(1).text().trim()),
                 "size": $(element).find('td').eq(2).text().trim(),
                 "seeders": $(element).find('td').eq(3).text().trim(),
                 "leechers": $(element).find('td').eq(4).text().trim(),

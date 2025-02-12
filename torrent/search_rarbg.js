@@ -22,7 +22,9 @@ async function search_rarbg(query, page = '1') {
         $('tr.lista2').each((_, el) => {
             const data = {};
             const td = $(el).children('td');
+          
             data.name = $(td).eq(1).find('a').attr('title');
+            data.dateuploaded =  $(td).eq(3).text().split(" ")[0].split("-")[2] + "/" + $(td).eq(3).text().split(" ")[0].split("-")[1] + "/" + $(td).eq(3).text().split(" ")[0].split("-")[0].substring(2);
             data.size = $(td).eq(4).text();
             data.seeders = $(td).eq(5).find('font').text();
             data.leechers = $(td).eq(6).text();

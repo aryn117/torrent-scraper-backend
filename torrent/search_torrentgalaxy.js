@@ -24,16 +24,10 @@ async function search_torrentgalaxy(query = '', page = '0') {
 
     $('div.tgxtablerow.txlight').each((i, element) => {
         const data = {};
-        const posterRegex = /\bhttps?:[^)''"]+\.(?:jpg|jpeg|gif|png)(?![a-z])/g;
-        data.Name = $(element).find(":nth-child(4) div a b").text();
-        try {
-            data.Poster = ($(element).attr('onmouseover')).match(posterRegex)[0];
-        } catch {
-            data.Poster = "";
-        }
-        // data.Category = $(element).find(":nth-child(1) a small").text();
-        // data.UploadedBy = $(element).find(':nth-child(7) span a span').text();
-        // data.dateUploaded = $(element).find(":nth-child(12)").text();
+   
+        data.name = $(element).find(":nth-child(4) div a b").text();
+     
+        data.dateuploaded = ($(element).find(":nth-child(12)").text()).split(" ")[0].toString();
        
         data.url = "https://torrentgalaxy.to" + $(element).find("a.txlight").attr('href');
         data.size = $(element).find(':nth-child(8)').text();
