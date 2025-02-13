@@ -31,7 +31,7 @@ async function search_torrentgalaxy(query = '', page = '0') {
        
         data.url = "https://torrentgalaxy.to" + $(element).find("a.txlight").attr('href');
         data.size = $(element).find(':nth-child(8)').text();
-        data.seeders = $(element).find(':nth-child(11) span font:nth-child(1)').text();
+        data.seeders = $(element).find(':nth-child(11) span font:nth-child(1)').text().replace(/[\.,]/g);
         data.leechers = $(element).find(':nth-child(11) span font:nth-child(2)').text();
         data.torrent = $(element).find(".tgxtablecell.collapsehide.rounded.txlight a").attr("href");
         data.magnet = $(element).find(".tgxtablecell.collapsehide.rounded.txlight a").next().attr("href");
